@@ -11,6 +11,11 @@
   </head>
   <body>
     <div id="poster-frame">
+      <div id="tap-overlay">
+        <h2>Tap to Start</h2>
+        <p>點擊畫面以啟用搖晃互動</p>
+      </div>
+
       <div class="marquee-ring ring-back">
         <svg viewBox="0 0 200 200">
           <path
@@ -50,21 +55,78 @@
 
     <script>
       const glassCupEl = document.getElementById("glass-cup");
+      const overlay = document.getElementById("tap-overlay");
 
-      // 寫死你的黃金比例數值
+      // 固定你的最終黃金比例與物理參數
       const currentCupWidthPct = 0.78;
       const currentCupHeightPct = 0.6;
       const currentPopperDensity = 12;
       const currentPopperSizePct = 0.12;
       const currentPopperJumpMulti = 240;
 
-      // --- p5.js 與 MediaPipe 邏輯 ---
+      // 雙引擎物理動能變數
+      let handEnergy = 0;
+      let deviceEnergy = 0;
+      let shakeEnergy = 0;
+
       let handPos = { x: 0, y: 0 };
       let prevPos = { x: 0, y: 0 };
-      let shakeEnergy = 0;
       let isHandDetected = false;
       let poppers = [];
       let imgBg, imgCrisp;
+
+      // 修改：偵測當前是否為行動裝置 (手機或平板)
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+
+      if (isMobileDevice) {
+        // 如果是手機，將預設隱藏的覆蓋層打開顯示
+        overlay.style.display = "flex";
+      } else {
+        // 如果是電腦，確保隱藏，並直接註冊普通的陀螺儀傾聽器（雖然電腦不觸發，但防報錯）
+        overlay.style.display = "none";
+        window.addEventListener("devicemotion", handleDeviceMotion);
+      }
+
+      // 手機點擊覆蓋層授權事件
+      overlay.addEventListener("click", () => {
+        overlay.style.opacity = "0";
+        setTimeout(() => (overlay.style.display = "none"), 500);
+
+        if (
+          typeof DeviceMotionEvent !== "undefined" &&
+          typeof DeviceMotionEvent.requestPermission === "function"
+        ) {
+          DeviceMotionEvent.requestPermission()
+            .then((permissionState) => {
+              if (permissionState === "granted") {
+                window.addEventListener("devicemotion", handleDeviceMotion);
+              }
+            })
+            .catch(console.error);
+        } else {
+          window.addEventListener("devicemotion", handleDeviceMotion);
+        }
+      });
+
+      // 處理手機陀螺儀加速計資料
+      function handleDeviceMotion(event) {
+        let acc = event.acceleration;
+        if (!acc || acc.x === null) {
+          acc = event.accelerationIncludingGravity;
+        }
+        if (!acc || acc.x === null) return;
+
+        let speed = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+
+        // 閥值過濾
+        if (speed > 12) {
+          deviceEnergy += speed * 1.5;
+          if (deviceEnergy > 60) deviceEnergy = 60;
+        }
+      }
 
       function preload() {
         imgBg = loadImage("./images/bg.png");
@@ -91,11 +153,10 @@
           const hand = results.multiHandLandmarks[0][9];
           handPos = { x: (1 - hand.x) * width, y: hand.y * height };
           let d = dist(handPos.x, handPos.y, prevPos.x, prevPos.y);
-          shakeEnergy = lerp(shakeEnergy, d, 0.05);
+          handEnergy = d;
           prevPos = { ...handPos };
         } else {
           isHandDetected = false;
-          shakeEnergy = lerp(shakeEnergy, 0, 0.1);
         }
       });
 
@@ -170,6 +231,16 @@
           background(255, 234, 0);
         }
 
+        // 能量淡出衰減
+        deviceEnergy = lerp(deviceEnergy, 0, 0.05);
+        if (!isHandDetected) {
+          handEnergy = lerp(handEnergy, 0, 0.1);
+        }
+
+        let totalTargetEnergy = handEnergy + deviceEnergy;
+        if (totalTargetEnergy > 60) totalTargetEnergy = 60;
+
+        shakeEnergy = lerp(shakeEnergy, totalTargetEnergy, 0.1);
         let shakeIntensity = map(shakeEnergy, 0, 60, 0, 1, true);
 
         push();
@@ -214,15 +285,13 @@
         });
         pop();
 
-        // 繪製手部追蹤的「四芒星」游標
         if (isHandDetected) {
           push();
           translate(handPos.x, handPos.y);
-          rotate(frameCount * 0.05); // 讓四芒星緩緩自轉
+          rotate(frameCount * 0.05);
           noStroke();
-          fill(255, 255, 255, 230); // 微透明的白色
+          fill(255, 255, 255, 230);
 
-          // 繪製四芒星 (Sparkle) 的幾何頂點
           beginShape();
           vertex(0, -15);
           vertex(4, -4);
