@@ -23,7 +23,7 @@ body {
 }
 
 /* =========================================
-   2. 🖼️ 數位海報畫框 
+   2. 數位海報畫框 
 ========================================= */
 #poster-frame {
   position: relative;
@@ -53,7 +53,7 @@ video {
 }
 
 /* =========================================
-   3. 🪐 3D 立體行星環
+   3. 3D 立體行星環
 ========================================= */
 .marquee-ring {
   position: absolute;
@@ -100,7 +100,7 @@ video {
 }
 
 /* =========================================
-   4. 🥛 中層飲料杯本體 
+   4. 中層飲料杯本體 
 ========================================= */
 #glass-cup {
   position: absolute;
@@ -135,7 +135,7 @@ video {
 }
 
 /* =========================================
-   5. ✨ 上層前景圖檔 
+   5. 上層前景圖檔 
 ========================================= */
 #poster-foreground {
   position: absolute;
@@ -150,4 +150,43 @@ video {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+/* =========================================
+   6. 點擊啟動覆蓋層 
+========================================= */
+#tap-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+
+  /* 修改：預設改為 none 隱藏，由 JS 動態開啟 */
+  display: none;
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  cursor: pointer;
+  transition: opacity 0.5s ease;
+}
+
+#tap-overlay h2 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+#tap-overlay p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.7;
+  letter-spacing: 1px;
 }
