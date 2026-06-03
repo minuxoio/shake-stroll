@@ -61,11 +61,9 @@ video {
   aspect-ratio: 1 / 1;
   left: 50%;
 
-  /* ✨ 套用預設：行星環高度 56% */
   top: var(--ring-top, 56%);
   pointer-events: none;
 
-  /* ✨ 套用預設：文字傾角 49deg */
   transform: translate(-50%, -50%) rotateX(var(--ring-angle, 49deg));
   transform-origin: center center;
 }
@@ -107,7 +105,6 @@ video {
 #glass-cup {
   position: absolute;
 
-  /* ✨ 套用預設：杯子寬 78%、高 60%、位置 59% */
   width: var(--cup-width, 78%);
   height: var(--cup-height, 60%);
   top: var(--cup-top, 59%);
@@ -153,43 +150,4 @@ video {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-}
-
-/* =========================================
-   🛠️ 開發者微調面板樣式
-========================================= */
-#dev-panel {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #555;
-  z-index: 1000;
-  font-family: inherit;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: opacity 0.3s ease;
-}
-
-#dev-panel h3 {
-  margin: 0 0 15px 0;
-  font-size: 14px;
-  color: #ffea00;
-  text-transform: uppercase;
-}
-.slider-group {
-  margin-bottom: 15px;
-}
-.slider-group label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  margin-bottom: 5px;
-  color: #ccc;
-}
-.slider-group input[type="range"] {
-  width: 200px;
-  cursor: pointer;
 }

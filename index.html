@@ -49,96 +49,14 @@
     </div>
 
     <script>
-      // --- UI 面板控制邏輯 ---
-      const devPanel = document.getElementById("dev-panel");
       const glassCupEl = document.getElementById("glass-cup");
-      const rings = document.querySelectorAll(".marquee-ring");
 
-      const sliderWidth = document.getElementById("slider-width");
-      const sliderHeight = document.getElementById("slider-height");
-      const sliderTop = document.getElementById("slider-top");
-      const sliderRingTop = document.getElementById("slider-ring-top");
-      const sliderRingAngle = document.getElementById("slider-ring-angle");
-      const sliderPopperDensity = document.getElementById(
-        "slider-popper-density",
-      );
-      const sliderPopperSize = document.getElementById("slider-popper-size");
-      const sliderPopperJump = document.getElementById("slider-popper-jump");
-
-      const valWidth = document.getElementById("val-width");
-      const valHeight = document.getElementById("val-height");
-      const valTop = document.getElementById("val-top");
-      const valRingTop = document.getElementById("val-ring-top");
-      const valRingAngle = document.getElementById("val-ring-angle");
-      const valPopperDensity = document.getElementById("val-popper-density");
-      const valPopperSize = document.getElementById("val-popper-size");
-      const valPopperJump = document.getElementById("val-popper-jump");
-
-      let currentCupWidthPct = sliderWidth.value / 100;
-      let currentCupHeightPct = sliderHeight.value / 100;
-
-      let currentPopperDensity = parseInt(sliderPopperDensity.value);
-      let currentPopperSizePct = sliderPopperSize.value / 100;
-      let currentPopperJumpMulti = parseInt(sliderPopperJump.value);
-
-      function updateLayout() {
-        if (glassCupEl) {
-          glassCupEl.style.setProperty("--cup-width", sliderWidth.value + "%");
-          glassCupEl.style.setProperty(
-            "--cup-height",
-            sliderHeight.value + "%",
-          );
-          glassCupEl.style.setProperty("--cup-top", sliderTop.value + "%");
-
-          currentCupWidthPct = sliderWidth.value / 100;
-          currentCupHeightPct = sliderHeight.value / 100;
-
-          valWidth.innerText = sliderWidth.value + "%";
-          valHeight.innerText = sliderHeight.value + "%";
-          valTop.innerText = sliderTop.value + "%";
-        }
-
-        rings.forEach((ring) => {
-          ring.style.setProperty("--ring-top", sliderRingTop.value + "%");
-          ring.style.setProperty("--ring-angle", sliderRingAngle.value + "deg");
-        });
-        valRingTop.innerText = sliderRingTop.value + "%";
-        valRingAngle.innerText = sliderRingAngle.value + "deg";
-      }
-
-      function updatePopperPhysics() {
-        currentPopperSizePct = sliderPopperSize.value / 100;
-        currentPopperJumpMulti = parseInt(sliderPopperJump.value);
-
-        valPopperSize.innerText = sliderPopperSize.value + "%";
-        valPopperJump.innerText = sliderPopperJump.value;
-      }
-
-      function updateDensity() {
-        currentPopperDensity = parseInt(sliderPopperDensity.value);
-        valPopperDensity.innerText = sliderPopperDensity.value;
-
-        if (typeof recreatePoppers === "function") {
-          recreatePoppers(currentPopperDensity);
-        }
-      }
-
-      sliderWidth.addEventListener("input", updateLayout);
-      sliderHeight.addEventListener("input", updateLayout);
-      sliderTop.addEventListener("input", updateLayout);
-      sliderRingTop.addEventListener("input", updateLayout);
-      sliderRingAngle.addEventListener("input", updateLayout);
-
-      sliderPopperDensity.addEventListener("input", updateDensity);
-      sliderPopperSize.addEventListener("input", updatePopperPhysics);
-      sliderPopperJump.addEventListener("input", updatePopperPhysics);
-
-      window.addEventListener("keydown", (e) => {
-        if (e.key.toLowerCase() === "h") {
-          devPanel.style.display =
-            devPanel.style.display === "none" ? "block" : "none";
-        }
-      });
+      // 寫死你的黃金比例數值
+      const currentCupWidthPct = 0.78;
+      const currentCupHeightPct = 0.6;
+      const currentPopperDensity = 12;
+      const currentPopperSizePct = 0.12;
+      const currentPopperJumpMulti = 240;
 
       // --- p5.js 與 MediaPipe 邏輯 ---
       let handPos = { x: 0, y: 0 };
@@ -306,14 +224,14 @@
 
           // 繪製四芒星 (Sparkle) 的幾何頂點
           beginShape();
-          vertex(0, -15); // 上頂點
-          vertex(4, -4); // 內縮點 (右上)
-          vertex(15, 0); // 右頂點
-          vertex(4, 4); // 內縮點 (右下)
-          vertex(0, 15); // 下頂點
-          vertex(-4, 4); // 內縮點 (左下)
-          vertex(-15, 0); // 左頂點
-          vertex(-4, -4); // 內縮點 (左上)
+          vertex(0, -15);
+          vertex(4, -4);
+          vertex(15, 0);
+          vertex(4, 4);
+          vertex(0, 15);
+          vertex(-4, 4);
+          vertex(-15, 0);
+          vertex(-4, -4);
           endShape(CLOSE);
           pop();
         }
