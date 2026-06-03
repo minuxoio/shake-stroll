@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shake&Stroll 搖搖晃晃 | 新品上市</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  </head>
+  <body>
+    <div id="dev-panel">
+      <h3>佈局與物理微調面板 (按 H 隱藏)</h3>
+      <div class="slider-group">
+        <label>杯子寬度 (Width) <span id="val-width">78%</span></label>
+        <input type="range" id="slider-width" min="30" max="150" value="78" />
+      </div>
+      <div class="slider-group">
+        <label>杯子高度 (Height) <span id="val-height">60%</span></label>
+        <input type="range" id="slider-height" min="30" max="100" value="60" />
+      </div>
+      <div class="slider-group">
+        <label>杯子位置 (Top) <span id="val-top">59%</span></label>
+        <input type="range" id="slider-top" min="0" max="100" value="59" />
+      </div>
+      <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0" />
+      <div class="slider-group">
+        <label>行星環高度 (Ring Top) <span id="val-ring-top">56%</span></label>
+        <input type="range" id="slider-ring-top" min="0" max="100" value="56" />
+      </div>
+      <div class="slider-group">
+        <label
+          >文字傾角 (Ring Angle) <span id="val-ring-angle">49deg</span></label
+        >
+        <input
+          type="range"
+          id="slider-ring-angle"
+          min="0"
+          max="85"
+          value="49"
+        />
+      </div>
+      <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0" />
+      <div class="slider-group">
+        <label
+          >配料密度 (Popper Density)
+          <span id="val-popper-density">12</span></label
+        >
+        <input
+          type="range"
+          id="slider-popper-density"
+          min="2"
+          max="25"
+          value="12"
+        />
+      </div>
+      <div class="slider-group">
+        <label
+          >配料大小 (Popper Size) <span id="val-popper-size">12%</span></label
+        >
+        <input
+          type="range"
+          id="slider-popper-size"
+          min="5"
+          max="30"
+          value="12"
+        />
+      </div>
+      <div class="slider-group">
+        <label
+          >彈跳彈跳度 (Popper Jump) <span id="val-popper-jump">240</span></label
+        >
+        <input
+          type="range"
+          id="slider-popper-jump"
+          min="50"
+          max="400"
+          value="240"
+        />
+      </div>
+    </div>
+
+    <div id="poster-frame">
+      <div class="marquee-ring ring-back">
+        <svg viewBox="0 0 200 200">
+          <path
+            id="circlePath"
+            d="M 100, 100 m -90, 0 a 90,90 0 1,1 180,0 a 90,90 0 1,1 -180,0"
+            fill="none"
+          />
+          <text>
+            <textPath href="#circlePath" startOffset="0%">
+              // SHAKE & STROLL // NEW ARRIVAL // SHAKY CRISPS // SHAKE & STROLL
+              // NEW ARRIVAL //
+            </textPath>
+          </text>
+        </svg>
+      </div>
+
+      <div id="glass-cup"></div>
+
+      <div class="marquee-ring ring-front">
+        <svg viewBox="0 0 200 200">
+          <path
+            id="circlePath2"
+            d="M 100, 100 m -90, 0 a 90,90 0 1,1 180,0 a 90,90 0 1,1 -180,0"
+            fill="none"
+          />
+          <text>
+            <textPath href="#circlePath2" startOffset="0%">
+              // SHAKE & STROLL // NEW ARRIVAL // SHAKY CRISPS // SHAKE & STROLL
+              // NEW ARRIVAL //
+            </textPath>
+          </text>
+        </svg>
+      </div>
+
+      <div id="poster-foreground"></div>
+    </div>
+
+    <script>
+      // --- UI 面板控制邏輯 ---
+      const devPanel = document.getElementById("dev-panel");
+      const glassCupEl = document.getElementById("glass-cup");
+      const rings = document.querySelectorAll(".marquee-ring");
+
+      const sliderWidth = document.getElementById("slider-width");
+      const sliderHeight = document.getElementById("slider-height");
+      const sliderTop = document.getElementById("slider-top");
+      const sliderRingTop = document.getElementById("slider-ring-top");
+      const sliderRingAngle = document.getElementById("slider-ring-angle");
+      const sliderPopperDensity = document.getElementById(
+        "slider-popper-density",
+      );
+      const sliderPopperSize = document.getElementById("slider-popper-size");
+      const sliderPopperJump = document.getElementById("slider-popper-jump");
+
+      const valWidth = document.getElementById("val-width");
+      const valHeight = document.getElementById("val-height");
+      const valTop = document.getElementById("val-top");
+      const valRingTop = document.getElementById("val-ring-top");
+      const valRingAngle = document.getElementById("val-ring-angle");
+      const valPopperDensity = document.getElementById("val-popper-density");
+      const valPopperSize = document.getElementById("val-popper-size");
+      const valPopperJump = document.getElementById("val-popper-jump");
+
+      let currentCupWidthPct = sliderWidth.value / 100;
+      let currentCupHeightPct = sliderHeight.value / 100;
+
+      let currentPopperDensity = parseInt(sliderPopperDensity.value);
+      let currentPopperSizePct = sliderPopperSize.value / 100;
+      let currentPopperJumpMulti = parseInt(sliderPopperJump.value);
+
+      function updateLayout() {
+        if (glassCupEl) {
+          glassCupEl.style.setProperty("--cup-width", sliderWidth.value + "%");
+          glassCupEl.style.setProperty(
+            "--cup-height",
+            sliderHeight.value + "%",
+          );
+          glassCupEl.style.setProperty("--cup-top", sliderTop.value + "%");
+
+          currentCupWidthPct = sliderWidth.value / 100;
+          currentCupHeightPct = sliderHeight.value / 100;
+
+          valWidth.innerText = sliderWidth.value + "%";
+          valHeight.innerText = sliderHeight.value + "%";
+          valTop.innerText = sliderTop.value + "%";
+        }
+
+        rings.forEach((ring) => {
+          ring.style.setProperty("--ring-top", sliderRingTop.value + "%");
+          ring.style.setProperty("--ring-angle", sliderRingAngle.value + "deg");
+        });
+        valRingTop.innerText = sliderRingTop.value + "%";
+        valRingAngle.innerText = sliderRingAngle.value + "deg";
+      }
+
+      function updatePopperPhysics() {
+        currentPopperSizePct = sliderPopperSize.value / 100;
+        currentPopperJumpMulti = parseInt(sliderPopperJump.value);
+
+        valPopperSize.innerText = sliderPopperSize.value + "%";
+        valPopperJump.innerText = sliderPopperJump.value;
+      }
+
+      function updateDensity() {
+        currentPopperDensity = parseInt(sliderPopperDensity.value);
+        valPopperDensity.innerText = sliderPopperDensity.value;
+
+        if (typeof recreatePoppers === "function") {
+          recreatePoppers(currentPopperDensity);
+        }
+      }
+
+      sliderWidth.addEventListener("input", updateLayout);
+      sliderHeight.addEventListener("input", updateLayout);
+      sliderTop.addEventListener("input", updateLayout);
+      sliderRingTop.addEventListener("input", updateLayout);
+      sliderRingAngle.addEventListener("input", updateLayout);
+
+      sliderPopperDensity.addEventListener("input", updateDensity);
+      sliderPopperSize.addEventListener("input", updatePopperPhysics);
+      sliderPopperJump.addEventListener("input", updatePopperPhysics);
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key.toLowerCase() === "h") {
+          devPanel.style.display =
+            devPanel.style.display === "none" ? "block" : "none";
+        }
+      });
+
+      // --- p5.js 與 MediaPipe 邏輯 ---
+      let handPos = { x: 0, y: 0 };
+      let prevPos = { x: 0, y: 0 };
+      let shakeEnergy = 0;
+      let isHandDetected = false;
+      let poppers = [];
+      let imgBg, imgCrisp;
+
+      function preload() {
+        imgBg = loadImage("./images/bg.png");
+        imgCrisp = loadImage("./images/crisp.png");
+      }
+
+      const hands = new Hands({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+      });
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+
+      hands.onResults((results) => {
+        if (
+          results.multiHandLandmarks &&
+          results.multiHandLandmarks.length > 0
+        ) {
+          isHandDetected = true;
+          const hand = results.multiHandLandmarks[0][9];
+          handPos = { x: (1 - hand.x) * width, y: hand.y * height };
+          let d = dist(handPos.x, handPos.y, prevPos.x, prevPos.y);
+          shakeEnergy = lerp(shakeEnergy, d, 0.05);
+          prevPos = { ...handPos };
+        } else {
+          isHandDetected = false;
+          shakeEnergy = lerp(shakeEnergy, 0, 0.1);
+        }
+      });
+
+      const videoElement = document.createElement("video");
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          await hands.send({ image: videoElement });
+        },
+        width: 640,
+        height: 480,
+      });
+      camera.start().catch((err) => console.error("相機啟動失敗:", err));
+
+      function recreatePoppers(density) {
+        poppers = [];
+
+        let xRangeBase = 85;
+        let yTopBase = 170;
+        let yBotBase = 240;
+
+        let visualDensityFactor = map(density, 2, 25, 0.7, 1.3);
+        let dynamicXRange = xRangeBase * visualDensityFactor;
+        let dynamicYRange = (yBotBase - yTopBase) * visualDensityFactor;
+        let dynamicYTop = yBotBase - dynamicYRange;
+
+        let estimatedSize = 540 * currentCupWidthPct * currentPopperSizePct;
+        let safeDistance = constrain(estimatedSize * 0.7, 15, 60);
+
+        for (let i = 0; i < density; i++) {
+          let safeToPlace = false;
+          let attempts = 0;
+          let newX, newY;
+
+          while (!safeToPlace && attempts < 100) {
+            newX = random(-dynamicXRange, dynamicXRange);
+            newY = random(dynamicYTop, yBotBase);
+            safeToPlace = true;
+
+            for (let j = 0; j < poppers.length; j++) {
+              let d = dist(newX, newY, poppers[j].x, poppers[j].y);
+              if (d < safeDistance) {
+                safeToPlace = false;
+                break;
+              }
+            }
+            attempts++;
+          }
+
+          poppers.push({
+            x: newX,
+            y: newY,
+            offset: random(100),
+          });
+        }
+      }
+
+      function setup() {
+        let canvas = createCanvas(540, 960);
+        canvas.id("p5-canvas");
+        canvas.parent("poster-frame");
+        imageMode(CENTER);
+
+        if (typeof recreatePoppers === "function") {
+          recreatePoppers(currentPopperDensity);
+        }
+      }
+
+      function draw() {
+        if (imgBg) {
+          image(imgBg, width / 2, height / 2, width, height);
+        } else {
+          background(255, 234, 0);
+        }
+
+        let shakeIntensity = map(shakeEnergy, 0, 60, 0, 1, true);
+
+        push();
+        translate(width / 2, height / 2);
+
+        let baseAngle = 10 * (Math.PI / 180);
+        let yOffset = sin(frameCount * 0.3) * (shakeIntensity * 80);
+        let xOffset = cos(frameCount * 0.2) * (shakeIntensity * 60);
+        let angle = baseAngle + sin(frameCount * 0.3) * (shakeIntensity * 0.1);
+
+        if (glassCupEl) {
+          glassCupEl.style.setProperty("--shake-angle", angle + "rad");
+          glassCupEl.style.setProperty("--shake-y", yOffset + "px");
+          glassCupEl.style.setProperty("--shake-x", xOffset + "px");
+        }
+
+        rotate(angle);
+        translate(xOffset, yOffset);
+
+        let visualCupWidthEstimate = 540 * currentCupWidthPct;
+        let dynamicPopperSizeBase =
+          visualCupWidthEstimate * currentPopperSizePct;
+        let popperImageSize = constrain(dynamicPopperSizeBase, 10, 120);
+
+        poppers.forEach((p) => {
+          let jump =
+            abs(sin(frameCount * 0.15 + p.offset)) *
+            (shakeIntensity * currentPopperJumpMulti);
+          let finalY = p.y - jump;
+
+          if (finalY < -200) {
+            finalY = -200;
+          }
+
+          if (imgCrisp) {
+            image(imgCrisp, p.x, finalY, popperImageSize, popperImageSize);
+          } else {
+            noStroke();
+            fill(255);
+            ellipse(p.x, finalY, popperImageSize * 0.5, popperImageSize * 0.5);
+          }
+        });
+        pop();
+
+        // 繪製手部追蹤的「四芒星」游標
+        if (isHandDetected) {
+          push();
+          translate(handPos.x, handPos.y);
+          rotate(frameCount * 0.05); // 讓四芒星緩緩自轉
+          noStroke();
+          fill(255, 255, 255, 230); // 微透明的白色
+
+          // 繪製四芒星 (Sparkle) 的幾何頂點
+          beginShape();
+          vertex(0, -15); // 上頂點
+          vertex(4, -4); // 內縮點 (右上)
+          vertex(15, 0); // 右頂點
+          vertex(4, 4); // 內縮點 (右下)
+          vertex(0, 15); // 下頂點
+          vertex(-4, 4); // 內縮點 (左下)
+          vertex(-15, 0); // 左頂點
+          vertex(-4, -4); // 內縮點 (左上)
+          endShape(CLOSE);
+          pop();
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,195 @@
+/* =========================================
+   0. 載入自訂字體 (LINE Seed TW Regular)
+========================================= */
+@font-face {
+  font-family: "LINE Seed TW";
+  src: url("./fonts/LINESeedTW-Rg.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* =========================================
+   1. 全域環境設定
+========================================= */
+body {
+  margin: 0;
+  background-color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: "LINE Seed TW", sans-serif;
+  overflow: hidden;
+}
+
+/* =========================================
+   2. 🖼️ 數位海報畫框 
+========================================= */
+#poster-frame {
+  position: relative;
+  height: 85vh;
+  aspect-ratio: 9 / 16;
+  background-color: #000;
+  border: 8px solid #fff;
+  border-radius: 20px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 234, 0, 0.3);
+  overflow: hidden;
+}
+
+video {
+  display: none;
+}
+
+#p5-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  z-index: 1;
+}
+
+/* =========================================
+   3. 🪐 3D 立體行星環
+========================================= */
+.marquee-ring {
+  position: absolute;
+  width: 95%;
+  aspect-ratio: 1 / 1;
+  left: 50%;
+
+  /* ✨ 套用預設：行星環高度 56% */
+  top: var(--ring-top, 56%);
+  pointer-events: none;
+
+  /* ✨ 套用預設：文字傾角 49deg */
+  transform: translate(-50%, -50%) rotateX(var(--ring-angle, 49deg));
+  transform-origin: center center;
+}
+
+.ring-back {
+  z-index: 5;
+}
+.ring-front {
+  z-index: 15;
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+}
+
+.marquee-ring svg {
+  width: 100%;
+  height: 100%;
+  animation: spin 15s linear infinite;
+}
+
+.marquee-ring text {
+  fill: #fff;
+  font-family: "LINE Seed TW", sans-serif;
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 4px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   4. 🥛 中層飲料杯本體 
+========================================= */
+#glass-cup {
+  position: absolute;
+
+  /* ✨ 套用預設：杯子寬 78%、高 60%、位置 59% */
+  width: var(--cup-width, 78%);
+  height: var(--cup-height, 60%);
+  top: var(--cup-top, 59%);
+  left: 50%;
+
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  mask-image: url("./images/cup.png");
+  -webkit-mask-image: url("./images/cup.png");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+
+  background-image: url("./images/cup.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  transform: translate(
+      calc(-50% + var(--shake-x, 0px)),
+      calc(-50% + var(--shake-y, 0px))
+    )
+    rotate(var(--shake-angle, 0rad));
+  transform-origin: center center;
+}
+
+/* =========================================
+   5. ✨ 上層前景圖檔 
+========================================= */
+#poster-foreground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  pointer-events: none;
+
+  background-image: url("./images/foreground.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* =========================================
+   🛠️ 開發者微調面板樣式
+========================================= */
+#dev-panel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #555;
+  z-index: 1000;
+  font-family: inherit;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.3s ease;
+}
+
+#dev-panel h3 {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: #ffea00;
+  text-transform: uppercase;
+}
+.slider-group {
+  margin-bottom: 15px;
+}
+.slider-group label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: #ccc;
+}
+.slider-group input[type="range"] {
+  width: 200px;
+  cursor: pointer;
+}
